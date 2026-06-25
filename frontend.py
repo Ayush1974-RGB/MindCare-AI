@@ -1,3 +1,9 @@
+# Phase 1: Setup Frontend
+# Setup Streamlit
+# User is able to ask question
+# Show response from backend
+
+
 import streamlit as st
 st.set_page_config(page_title="Ai Mental Health Therapist", layout="wide")
 
