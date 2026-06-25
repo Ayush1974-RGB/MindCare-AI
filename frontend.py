@@ -5,6 +5,9 @@
 
 
 import streamlit as st
+import requests
+
+BACKEND_URL = "http://localhost:8000/ask"
 st.set_page_config(page_title="Ai Mental Health Therapist", layout="wide")
 
 st.markdown(
@@ -391,7 +394,7 @@ if "chat_history" not in st.session_state:
 
 # Step2: User is able to ask question
 # Chat input
-user_input = st.chat_input("What's on your mind today?")
+user_input = st.chat_input("Hi!! What's on your mind today?")
 if user_input:
     # Append user message
     st.session_state.chat_history.append({"role": "user", "content": user_input})
