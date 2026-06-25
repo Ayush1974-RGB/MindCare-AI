@@ -1,4 +1,5 @@
-Setup Ollama with Medgemma tool
-Setup Twilio calling API tool
-Setup Location tool
-Create an AI Agent & Link to backend
+TWILIO_ACCOUNT_SID = "AC1c45f327867639e6c3132227ab884127"
+TWILIO_AUTH_TOKEN = "b3073c3325a2a35f7265b87267112fe0"
+TWILIO_FROM_NUMBER = "+14472233763"  # your Twilio number
+EMERGENCY_CONTACT = "+919310109974"  # or your local emergency number
+OPENAI_API_KEY=""

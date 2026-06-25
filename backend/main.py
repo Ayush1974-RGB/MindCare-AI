@@ -17,8 +17,11 @@ async def ask(query: Query):
     #ai agent
  
 #step3:  Send response to the frontend
-    
-    return "This is the response"
+    response = {
+        "response": "This is the response",
+        "tool_called": "None"
+    }
+    return response
 
 
 if __name__ == "__main__":

@@ -398,12 +398,12 @@ user_input = st.chat_input("Hi!! What's on your mind today?")
 if user_input:
     # Append user message
     st.session_state.chat_history.append({"role": "user", "content": user_input})
-    
+    res = requests.post(BACKEND_URL, json={"message": user_input})
+
     # AI Agent exists here
-    response = requests.post(BACKEND_URL, json={"message": user_input})
-
-    st.session_state.chat_history.append({"role": "assistant", "content": f'{response.json()["response"]} WITH TOOL: [{response.json()["tool_called"]}]'})
-
+    # response = requests.post(BACKEND_URL, json={"message": user_input})
+    fixed_dummy_response = requests.post(BACKEND_URL, json={"message": user_input})
+    st.session_state.chat_history.append({"role": "assistant", "content": fixed_dummy_response.json()})
 
 # Step3: Show response from backend
 for msg in st.session_state.chat_history:
