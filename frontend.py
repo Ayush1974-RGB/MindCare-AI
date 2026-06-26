@@ -68,15 +68,48 @@ st.markdown(
 
         [data-testid="stHeader"] { background: transparent; }
         [data-testid="stToolbar"], #MainMenu, footer { visibility: hidden; }
-        .block-container { max-width: 1220px; padding: .75rem 2rem 8rem; }
 
+        /* ─── Fix: Remove max-width restriction and optimize padding ─── */
+        .block-container {
+            max-width: 100%;
+            padding: .75rem 1.5rem 8rem;
+            width: 100%;
+        }
+
+        /* ─── Fix: Sidebar background and border ─── */
         [data-testid="stSidebar"] {
             background: rgba(4, 5, 9, .94);
             border-right: 1px solid var(--line);
         }
 
-        [data-testid="stSidebar"] .block-container { padding-top: 1.3rem; }
-        [data-testid="stSidebar"] hr { border-color: var(--line); }
+        [data-testid="stSidebar"] .block-container {
+            padding: 1.3rem 1rem 6rem;
+            max-width: 100%;
+        }
+        
+        /* Ensure sidebar content is fully visible */
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            gap: 0.25rem;
+        }
+
+        [data-testid="stSidebar"] hr { border-color: var(--line); margin: 0.6rem 0; }
+
+        /* Streamlit default content area full width fix */
+        .main > .block-container {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+        }
+
+
+        /* Vertical nav section label */
+        .nav-section-label {
+            color: var(--mint);
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            margin: 0.5rem 0 0.35rem;
+        }
 
         .brand {
             display: flex;
@@ -105,8 +138,8 @@ st.markdown(
         .brand-sub { color: var(--muted); font-size: .72rem; }
 
         .side-card {
-            margin: 1rem 0;
-            padding: 1rem;
+            margin: 0.6rem 0;
+            padding: 0.85rem;
             border: 1px solid var(--line);
             border-radius: 18px;
             background: rgba(19, 51, 53, .55);
@@ -302,34 +335,6 @@ st.markdown(
 
         .metric-label { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
         .metric-value { margin-top: .25rem; color: var(--mint-soft); font: 700 1.1rem "Manrope", sans-serif; }
-
-        [data-testid="stTabs"] [data-baseweb="tab-list"] {
-            position: sticky;
-            top: .35rem;
-            z-index: 10;
-            gap: .45rem;
-            margin: .7rem 0 .45rem;
-            padding: .35rem;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: rgba(7, 27, 30, .7);
-            backdrop-filter: blur(18px);
-        }
-
-        [data-testid="stTabs"] button {
-            min-height: 42px;
-            border-radius: 12px;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        [data-testid="stTabs"] button[aria-selected="true"] {
-            color: #06211c;
-            background: linear-gradient(135deg, var(--mint-soft), #78d7bd);
-        }
-
-        [data-testid="stTabs"] [data-baseweb="tab-highlight"],
-        [data-testid="stTabs"] [data-baseweb="tab-border"] { display: none; }
 
         .chat-stage {
             display: grid;
@@ -605,14 +610,9 @@ st.markdown(
             .mind-orb-wrap { height: 150px; transform: scale(.82); }
             .metric-row { grid-template-columns: 1fr; }
             .login-shell { grid-template-columns: 1fr; }
-            [data-testid="stTabs"] [data-baseweb="tab-list"] {
-                position: static;
-                flex-direction: row;
-                overflow-x: auto;
-                margin-bottom: 1rem;
-            }
             .chat-stage { grid-template-columns: 1fr; }
             .chat-rail { position: static; }
+            [data-testid="stSidebar"] { min-width: unset; max-width: 100%; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -644,6 +644,8 @@ def initialize_state() -> None:
         st.session_state.mood_log = []
     if "pending_prompt" not in st.session_state:
         st.session_state.pending_prompt = None
+    if "nav_page" not in st.session_state:
+        st.session_state.nav_page = "Home"
 
 
 def render_login_page() -> None:
@@ -755,111 +757,7 @@ def care_card(item: dict) -> str:
     """
 
 
-initialize_state()
-
-if not st.session_state.authenticated:
-    render_login_page()
-    st.stop()
-
-with st.sidebar:
-    st.markdown(
-        """
-        <div class="brand">
-            <div class="brand-mark">MH</div>
-            <div>
-                <div class="brand-name">MindHarbor</div>
-                <div class="brand-sub">A calmer place to think</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.caption("SIGNED IN")
-    st.markdown(
-        f"""
-        <div class="side-card">
-            <strong>{html.escape(st.session_state.user_profile["name"])}</strong>
-            <p>{html.escape(st.session_state.user_profile["email"])}</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    if st.button("Log out", use_container_width=True):
-        st.session_state.authenticated = False
-        st.rerun()
-
-    st.caption("TODAY")
-    current_mood = (
-        st.session_state.mood_log[-1]["label"]
-        if st.session_state.mood_log
-        else "Not checked in"
-    )
-    st.markdown(
-        f"""
-        <div class="side-card">
-            <strong>{html.escape(current_mood)}</strong>
-            <p>Your latest emotional check-in. Small observations can reveal useful patterns.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    if st.button("+ Start a fresh conversation", use_container_width=True):
-        st.session_state.chat_history = [st.session_state.chat_history[0]]
-        st.rerun()
-
-    st.divider()
-    st.markdown(
-        """
-        <div class="side-card">
-            <strong>Need urgent help?</strong>
-            <p>If you may act on thoughts of harming yourself or someone else, call local emergency services now and stay with a trusted person.</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.caption(
-        "MindHarbor offers supportive information, not diagnosis, medical treatment, "
-        "or a replacement for a licensed professional."
-    )
-
-st.markdown(
-    """
-    <section class="dashboard-hero">
-        <div>
-            <div class="live-pill"><span class="live-dot"></span> Local AI ready</div>
-            <h1>Your space to pause, understand, and <span>move forward.</span></h1>
-            <p>Talk through what is weighing on you, check in with your mood, find nearby professional care, or take a two-minute reset.</p>
-            <div class="hero-actions">
-                <div class="hero-chip"><span>01</span> Context-aware chat</div>
-                <div class="hero-chip"><span>02</span> Nearby care finder</div>
-                <div class="hero-chip"><span>03</span> Calm reset tools</div>
-            </div>
-        </div>
-        <div class="mind-orb-wrap" aria-hidden="true"><div class="mind-orb"></div></div>
-    </section>
-    """,
-    unsafe_allow_html=True,
-)
-
-message_count = sum(1 for msg in st.session_state.chat_history if msg["role"] == "user")
-mood_count = len(st.session_state.mood_log)
-st.markdown(
-    f"""
-    <div class="metric-row">
-        <div class="metric-card"><div class="metric-label">Conversation</div><div class="metric-value">{message_count} reflections shared</div></div>
-        <div class="metric-card"><div class="metric-label">Check-ins</div><div class="metric-value">{mood_count} mood moments</div></div>
-        <div class="metric-card"><div class="metric-label">Privacy</div><div class="metric-value">Local AI model</div></div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-chat_tab, care_tab, checkin_tab, tools_tab = st.tabs(
-    ["Support chat", "Find care", "Daily check-in", "Calm toolkit"]
-)
-
-with chat_tab:
+def render_chat():
     st.markdown('<div class="section-title">A conversation without judgment</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-copy">Share as much or as little as feels comfortable. Replies appear as they are written.</div>',
@@ -907,7 +805,9 @@ with chat_tab:
                 {"role": "assistant", "content": response_text}
             )
             st.rerun()
-with care_tab:
+
+
+def render_care_finder():
     st.markdown('<div class="section-title">Find professional support nearby</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-copy">Search by city, neighborhood, or postal code. Results come from current OpenStreetMap listings.</div>',
@@ -951,28 +851,34 @@ with care_tab:
                     response.raise_for_status()
                     care_data = response.json()
                     st.session_state.care_results = care_data
-            except requests.exceptions.HTTPError:
-                detail = response.json().get("detail", "No results could be loaded.")
+            except requests.exceptions.HTTPError as e:
+                try:
+                    detail = response.json().get("detail", "No results could be loaded.")
+                except Exception:
+                    detail = "The location search returned an error. Check the spelling or try a different area."
                 st.error(detail)
             except requests.exceptions.RequestException:
-                st.error("The care finder is unavailable right now. Please try again shortly.")
+                st.error("The care finder is unavailable right now. Please check your internet connection and try again shortly.")
 
     if "care_results" in st.session_state:
         care_data = st.session_state.care_results
         results = care_data.get("results", [])
-        st.caption(f"Showing care near {care_data.get('location', location)}")
+        display_location = care_data.get("location", location)
+        st.caption(f"Showing care near {display_location}")
+        if care_data.get("message"):
+            st.info(care_data["message"])
         if results:
             for item in results:
                 st.markdown(care_card(item), unsafe_allow_html=True)
         else:
-            st.info(
-                "No specialist listings were found in this radius. Try a nearby city or "
-                "increase the distance. You can also ask a local hospital or primary-care "
-                "clinic for a mental-health referral."
+            st.warning(
+                "No listings were found in the available map data. Try a city or "
+                "neighborhood instead of a broad state name."
             )
         st.caption(f"Location data (c) {care_data.get('source', 'OpenStreetMap contributors')}")
 
-with checkin_tab:
+
+def render_checkin():
     st.markdown('<div class="section-title">Name what today feels like</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-copy">This is a reflection tool, not a clinical assessment. Notice the pattern without judging it.</div>',
@@ -1029,7 +935,8 @@ with checkin_tab:
                 unsafe_allow_html=True,
             )
 
-with tools_tab:
+
+def render_tools():
     st.markdown('<div class="section-title">Small tools for difficult moments</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="section-copy">Choose one simple action. You do not need to solve everything at once.</div>',
@@ -1082,6 +989,224 @@ with tools_tab:
                 """,
                 unsafe_allow_html=True,
             )
+
+
+def render_header(title: str, subtitle: str) -> None:
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 0.8rem; margin-bottom: 1.2rem; margin-top: 0.5rem;">
+            <div>
+                <h1 style="margin: 0; font-family: 'Manrope', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--text);">{title}</h1>
+                <p style="margin: 0.15rem 0 0; color: var(--muted); font-size: 0.85rem; line-height: 1.4;">{subtitle}</p>
+            </div>
+            <div class="live-pill" style="margin-bottom: 0;"><span class="live-dot"></span> Private session</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_navbar() -> None:
+    NAV_ITEMS = [
+        ("Home", "🏠 Home"),
+        ("Chat", "💬 Chat"),
+        ("Find Care", "📍 Find Care"),
+        ("Check-In", "📊 Check-In"),
+        ("Calm Tools", "🧘 Calm Tools"),
+    ]
+    current_page = st.session_state.get("nav_page", "Home")
+    
+    cols = st.columns(len(NAV_ITEMS))
+    for col, (page_key, label) in zip(cols, NAV_ITEMS):
+        with col:
+            if st.button(
+                label,
+                key=f"nav_top_{page_key}",
+                use_container_width=True,
+                type="primary" if page_key == current_page else "secondary",
+            ):
+                st.session_state.nav_page = page_key
+                st.rerun()
+
+
+def render_home() -> None:
+    st.markdown(
+        """
+        <section class="dashboard-hero">
+            <div>
+                <div class="live-pill"><span class="live-dot"></span> Local AI ready</div>
+                <h1>Your space to pause, understand, and <span>move forward.</span></h1>
+                <p>Talk through what is weighing on you, check in with your mood, find nearby professional care, or take a two-minute reset.</p>
+                <div class="hero-actions">
+                    <div class="hero-chip"><span>01</span> Context-aware chat</div>
+                    <div class="hero-chip"><span>02</span> Nearby care finder</div>
+                    <div class="hero-chip"><span>03</span> Calm reset tools</div>
+                </div>
+            </div>
+            <div class="mind-orb-wrap" aria-hidden="true"><div class="mind-orb"></div></div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    message_count = sum(1 for msg in st.session_state.chat_history if msg["role"] == "user")
+    mood_count = len(st.session_state.mood_log)
+    st.markdown(
+        f"""
+        <div class="metric-row">
+            <div class="metric-card"><div class="metric-label">Conversation</div><div class="metric-value">{message_count} reflections shared</div></div>
+            <div class="metric-card"><div class="metric-label">Check-ins</div><div class="metric-value">{mood_count} mood moments</div></div>
+            <div class="metric-card"><div class="metric-label">Privacy</div><div class="metric-value">Local AI model</div></div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="section-title">Quick Actions</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-copy">Select any of the key tools below to start exploring.</div>', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("💬 Open Support Chat", use_container_width=True):
+            st.session_state.nav_page = "Chat"
+            st.rerun()
+    with col2:
+        if st.button("📍 Find Nearby Care", use_container_width=True):
+            st.session_state.nav_page = "Find Care"
+            st.rerun()
+    with col3:
+        if st.button("📊 Mood Check-In", use_container_width=True):
+            st.session_state.nav_page = "Check-In"
+            st.rerun()
+    with col4:
+        if st.button("🧘 Calm Toolkit", use_container_width=True):
+            st.session_state.nav_page = "Calm Tools"
+            st.rerun()
+
+
+initialize_state()
+
+
+if not st.session_state.authenticated:
+    render_login_page()
+    st.stop()
+
+# ─── Sidebar: Vertical Navigation ─────────────────────────────────────────
+with st.sidebar:
+    st.markdown(
+        """
+        <div class="brand">
+            <div class="brand-mark">MH</div>
+            <div>
+                <div class="brand-name">MindHarbor</div>
+                <div class="brand-sub">A calmer place to think</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # User profile card
+    st.markdown(
+        f"""
+        <div class="side-card">
+            <strong>{html.escape(st.session_state.user_profile["name"])}</strong>
+            <p>{html.escape(st.session_state.user_profile["email"])}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Current mood brief
+    current_mood = (
+        st.session_state.mood_log[-1]["label"]
+        if st.session_state.mood_log
+        else "Not checked in"
+    )
+    st.markdown(
+        f"""
+        <div class="side-card">
+            <strong>{html.escape(current_mood)}</strong>
+            <p>Your latest emotional check-in. Small observations can reveal useful patterns.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ─── Navigation icons ──────────────────────────────────────────────
+    NAV_ITEMS = [
+        ("Home", "🏠 Home Dashboard"),
+        ("Chat", "💬 Support chat"),
+        ("Find Care", "📍 Find care"),
+        ("Check-In", "📊 Daily check-in"),
+        ("Calm Tools", "🧘 Calm toolkit"),
+    ]
+
+    current_page = st.session_state.get("nav_page", "Home")
+
+    st.markdown('<div class="nav-section-label">Navigate</div>', unsafe_allow_html=True)
+    for page_key, label in NAV_ITEMS:
+        if st.button(
+            label,
+            key=f"nav_{page_key}",
+            use_container_width=True,
+            type="primary" if page_key == current_page else "secondary",
+        ):
+            st.session_state.nav_page = page_key
+            st.rerun()
+    st.divider()
+
+    if st.button("+ Start a fresh conversation", use_container_width=True):
+        st.session_state.chat_history = [st.session_state.chat_history[0]]
+        st.rerun()
+
+    if st.button("Log out", use_container_width=True):
+        st.session_state.authenticated = False
+        st.rerun()
+
+    st.divider()
+    st.markdown(
+        """
+        <div class="side-card">
+            <strong>Need urgent help?</strong>
+            <p>If you may act on thoughts of harming yourself or someone else, call local emergency services now and stay with a trusted person.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "MindHarbor offers supportive information, not diagnosis, medical treatment, "
+        "or a replacement for a licensed professional."
+    )
+
+# ─── Main Content Area ─────────────────────────────────────────────────────
+page = st.session_state.get("nav_page", "Home")
+
+if page == "Home":
+    render_home()
+else:
+    page_headers = {
+        "Chat": ("Mind wellness companion", "Talk through what is weighing on your mind in a safe space."),
+        "Find Care": ("Find professional support", "Search for licensed therapists and clinical care near your area."),
+        "Check-In": ("Daily mood check-in", "Reflect on how your day has felt and log your patterns."),
+        "Calm Tools": ("Calm toolkit", "Take a pause with simple grounding exercises and physical resets.")
+    }
+    title, subtitle = page_headers.get(page, ("MindHarbor", "A calmer place to think"))
+    render_header(title, subtitle)
+    
+    # Render the horizontal navbar at the top for easy navigation
+    render_navbar()
+    st.markdown("<div style='margin-bottom: 1.5rem;'></div>", unsafe_allow_html=True)
+    
+    # Render the specific page content
+    if page == "Chat":
+        render_chat()
+    elif page == "Find Care":
+        render_care_finder()
+    elif page == "Check-In":
+        render_checkin()
+    elif page == "Calm Tools":
+        render_tools()
 
 st.markdown(
     '<div class="footer-note">MindHarbor - Supportive AI for reflection and navigation - Not medical care or an emergency service</div>',

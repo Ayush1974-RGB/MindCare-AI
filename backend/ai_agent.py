@@ -58,6 +58,19 @@ def get_simple_greeting(message: str) -> str | None:
     )
 
 
+def get_positive_quote(message: str) -> str | None:
+    normalized = " ".join(message.lower().split())
+    quote_terms = ("positive quote", "motivational quote", "inspiring quote", "motivation quote")
+    if not any(term in normalized for term in quote_terms):
+        return None
+
+    return (
+        "\"Start where you are. Use what you have. Do what you can.\"\n\n"
+        "For right now, let the next step be small enough that you can actually take it. "
+        "What is one tiny thing you want to move forward today?"
+    )
+
+
 def handle_message(message: str, history: list[dict] | None = None) -> tuple[str, str]:
     """
     Route a message without using a second model as a tool selector.
@@ -92,6 +105,10 @@ def handle_message(message: str, history: list[dict] | None = None) -> tuple[str
     if greeting_response:
         return greeting_response, "supportive_greeting"
 
+    quote_response = get_positive_quote(message)
+    if quote_response:
+        return quote_response, "positive_quote"
+
     return query_medgemma(message, history), "ask_mental_health_specialist"
 
 
@@ -105,6 +122,11 @@ def stream_message(message: str, history: list[dict] | None = None) -> Iterator[
     greeting_response = get_simple_greeting(message)
     if greeting_response:
         yield greeting_response
+        return
+
+    quote_response = get_positive_quote(message)
+    if quote_response:
+        yield quote_response
         return
 
     yield from stream_medgemma(message, history)
