@@ -1,7 +1,7 @@
 [project]
 name = "mentalhealthai-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "A local-first AI mental wellness dashboard with streaming chat, mood check-ins, calming tools, and nearby-care discovery."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
